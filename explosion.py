@@ -1,39 +1,26 @@
 import pygame
-import sprite
-from PIL import Image, ImageSequence
+from sprite import Sprite
 
-class Explosion(sprite.Sprite):
-    def __init__(self, x, y, width, height, speed, image, screen: pygame.Surface):
-        super().__init__(x, y, width, height, speed, image, screen)
-        self.screen = screen
-        self.index = 0
-        self.current_time = 0
-        self.animation_time = 100
-
-        self.explosion_frames = [
-            pygame.image.load(f"./assets/imgs/explosion/explosion{i}.png")
-            for i in range(1, 6)
-        ]
-        self.explosion_frames = [
-            pygame.transform.scale(frame, (150, 150)) for frame in self.explosion_frames
-        ]
-        self.frame_duration = 1500 // len(self.explosion_frames)
-        self.last_update = pygame.time.get_ticks()
-        self.current_frame = 0
-
-    def play_animation(self):
-        
-        for frame in self.explosion_frames:
-            self.screen.blit(frame, (self.x, self.y))
-            pygame.display.flip()
-            pygame.time.wait(100)
-            self.update()
+class Explosion(Sprite):
+    def __init__(self, x, y, width=150, height=150):
+        super().__init__(x, y, width, height, 0, None, None)
+        self.images = [pygame.transform.scale(pygame.image.load(f"./assets/imgs/explosion/explosion{i}.png"), (width, height)) for i in range(1, 7)]
+        self.rect = self.images[0].get_rect()
+        self.rect.topleft = (x, y)
+        self.current_image = 0
+        self.animation_speed = 5 
+        self.counter = 0
+        self.is_alive = True
 
     def update(self):
-        now = pygame.time.get_ticks()
-        if now - self.last_update > self.frame_duration:
-            self.last_update = now
-            self.current_frame += 1
-            if self.current_frame >= len(self.explosion_frames):
-                self.current_frame = 0
-            self.image = self.explosion_frames[self.current_frame]
+        self.counter += 1
+        if self.counter >= self.animation_speed:
+            self.counter = 0
+            self.current_image += 1
+            if self.current_image >= len(self.images):
+                self.is_alive = False
+
+    def draw(self, screen):
+        if self.is_alive:
+            screen.blit(self.images[self.current_image], self.rect)
+

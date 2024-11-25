@@ -11,6 +11,7 @@ class Enemies(sprite.Sprite):
         self.damage = damage
         self.enemies = []
         self.enemy_image = self.load_enemy_image()
+        self.explosions = []
 
     def load_enemy_image(self):
         enemy = pygame.image.load("./assets/imgs/Enemy.png")
@@ -40,15 +41,20 @@ class Enemies(sprite.Sprite):
             screen.blit(enemy[0], (enemy[1], enemy[2]))
 
     def destroy_enemy(self, screen, enemy):
-        explosion_animation = Explosion(
+        explosion = Explosion(
             x=enemy[1],
             y=enemy[2],
-            width=150,
-            height=150,
-            screen=screen,
-            speed=0,
-            image=None,
         )
-        explosion_animation.play_animation()
+        self.explosions.append(explosion)
         self.enemies.remove(enemy)
         self.health -= 1
+
+    def update_explosions(self):
+        for explosion in self.explosions:
+            explosion.update()
+            if not explosion.is_alive:
+                self.explosions.remove(explosion)
+
+    def draw_explosions(self, screen):
+        for explosion in self.explosions:
+            explosion.draw(screen)
