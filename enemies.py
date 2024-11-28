@@ -1,8 +1,7 @@
 import pygame
-import threading
+import random
 from explosion import Explosion
 import sprite
-
 
 class Enemies(sprite.Sprite):
     def __init__(self, health, damage):
@@ -12,6 +11,11 @@ class Enemies(sprite.Sprite):
         self.enemies = []
         self.enemy_image = self.load_enemy_image()
         self.explosions = []
+        self.spawn_timer = 0
+        self.spawn_delay = 1000
+        self.max_enemies = 24
+        self.screen_width = 1280
+        self.screen_height = 620
 
     def load_enemy_image(self):
         enemy = pygame.image.load("./assets/imgs/Enemy.png")
@@ -19,28 +23,37 @@ class Enemies(sprite.Sprite):
         enemy = pygame.transform.scale(enemy, (86, 151))
         return enemy
 
-    def draw_enemy_spaceships(self, screen):
-        if not self.enemies:
+    def spawn_enemy(self):
+        if len(self.enemies) < self.max_enemies:
+            x = random.randint(0, self.screen_width - 86)
+            y = random.randint(-200, -50)
+            dx = random.uniform(-1, 1)
+            dy = random.uniform(0.5, 1.5)
+            self.enemies.append([self.enemy_image, x, y, dx, dy])
 
-            def spawn_enemies(self):
-                rows = 3
-                cols = 8
-                x_offset = 50
-                y_offset = 50
-                spacing_x = 150
-                spacing_y = 150
+    def update(self, dt):
+        self.spawn_timer += dt
+        if self.spawn_timer >= self.spawn_delay:
+            self.spawn_enemy()
+            self.spawn_timer = 0
 
-                for row in range(rows):
-                    for col in range(cols):
-                        x = x_offset + col * spacing_x
-                        y = y_offset + row * spacing_y
-                        self.enemies.append((self.enemy_image, x, y))
-
-            spawn_enemies(self)
         for enemy in self.enemies:
-            screen.blit(enemy[0], (enemy[1], enemy[2]))
+            enemy[1] += enemy[3] * dt * 0.1 
+            enemy[2] += enemy[4] * dt * 0.1 
 
-    def destroy_enemy(self, screen, enemy):
+            if enemy[1] <= 0 or enemy[1] >= self.screen_width - 86:
+                enemy[3] *= -1
+            if enemy[2] >= self.screen_height - 151:
+                enemy[4] *= -1
+            if 0 <= enemy[1] <= self.screen_width - 86 and 0 <= enemy[2] <= self.screen_height - 151:
+                if enemy[2] <= 0:
+                    enemy[4] *= -1
+
+    def draw_enemy_spaceships(self, screen):
+        for enemy in self.enemies:
+            screen.blit(enemy[0], (int(enemy[1]), int(enemy[2])))
+
+    def destroy_enemy(self, enemy):
         explosion = Explosion(
             x=enemy[1],
             y=enemy[2],

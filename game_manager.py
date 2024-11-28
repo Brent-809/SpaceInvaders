@@ -8,6 +8,7 @@ class GameManager:
         self.player = player
         self.enemiesOBJ = enemiesOBJ
         self.bg_img_obj = pygame.image.load(self.bg_img)
+        self.bg_img_obj = pygame.transform.scale(self.bg_img_obj, (1280, 720))
         self.drawItems()
 
     def drawItems(self):
@@ -27,6 +28,8 @@ class GameManager:
         clock = pygame.time.Clock()
 
         while running:
+            dt = clock.tick(60) 
+
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
@@ -43,7 +46,7 @@ class GameManager:
                 self.player.attack()
                 self.player.last_attack_time = pygame.time.get_ticks()
 
+            self.enemiesOBJ.update(dt)
             self.enemiesOBJ.update_explosions()
             self.drawItems()
             pygame.display.update()
-            clock.tick(60)

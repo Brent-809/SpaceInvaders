@@ -45,14 +45,15 @@ class Player(sprite.Sprite):
             laserOBJ.move()
             for enemy in enemies.enemies:
                 if laserOBJ.check_collision(enemy):
-                    enemies.destroy_enemy(screen, enemy)
-                    self.lasers.remove(laserOBJ)
+                    enemies.destroy_enemy(enemy)
+                    if laserOBJ in self.lasers:
+                        self.lasers.remove(laserOBJ)
                     self.score += 10
                     break
             if laserOBJ.y < 0:
-                self.lasers.remove(laserOBJ)
+                if laserOBJ:
+                    self.lasers.remove(laserOBJ)
 
-        # Display the score
         font = pygame.font.Font(None, 36)
         score_text = font.render(f"Score: {self.score}", True, (255, 255, 255))
         screen.blit(score_text, (10, 10))
