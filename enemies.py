@@ -2,6 +2,8 @@ import pygame
 import random
 from explosion import Explosion
 import sprite
+import laser
+
 
 class Enemies(sprite.Sprite):
     def __init__(self, health, damage):
@@ -11,11 +13,18 @@ class Enemies(sprite.Sprite):
         self.enemies = []
         self.enemy_image = self.load_enemy_image()
         self.explosions = []
+        self.player = None
         self.spawn_timer = 0
         self.spawn_delay = 1000
         self.max_enemies = 24
         self.screen_width = 1280
         self.screen_height = 620
+        self.real_screen_height = 720
+        self.lasers = []
+        self.shot_timers = [random.uniform(0, 1)
+                            for _ in range(self.max_enemies)]
+        self.shot_delay = 3000
+        self.last_shot_time = 0
 
     def load_enemy_image(self):
         enemy = pygame.image.load("./assets/imgs/Enemy.png")
@@ -31,25 +40,8 @@ class Enemies(sprite.Sprite):
             dy = random.uniform(0.5, 1.5)
             self.enemies.append([self.enemy_image, x, y, dx, dy])
 
-    def update(self, dt):
-        self.spawn_timer += dt
-        if self.spawn_timer >= self.spawn_delay:
-            self.spawn_enemy()
-            self.spawn_timer = 0
-
-        for enemy in self.enemies:
-            enemy[1] += enemy[3] * dt * 0.1 
-            enemy[2] += enemy[4] * dt * 0.1 
-
-            if enemy[1] <= 0 or enemy[1] >= self.screen_width - 86:
-                enemy[3] *= -1
-            if enemy[2] >= self.screen_height - 151:
-                enemy[4] *= -1
-            if 0 <= enemy[1] <= self.screen_width - 86 and 0 <= enemy[2] <= self.screen_height - 151:
-                if enemy[2] <= 0:
-                    enemy[4] *= -1
-
-    def draw_enemy_spaceships(self, screen):
+    def draw_enemy_spaceships(self, screen, player):
+        self.player = player
         for enemy in self.enemies:
             screen.blit(enemy[0], (int(enemy[1]), int(enemy[2])))
 
@@ -71,3 +63,74 @@ class Enemies(sprite.Sprite):
     def draw_explosions(self, screen):
         for explosion in self.explosions:
             explosion.draw(screen)
+
+    def update(self, dt):
+        self.spawn_timer += dt
+        if self.spawn_timer >= self.spawn_delay:
+            self.spawn_enemy()
+            self.spawn_timer = 0
+
+        for enemy in self.enemies:
+            enemy[1] += enemy[3] * dt * 0.1
+            enemy[2] += enemy[4] * dt * 0.1
+
+            if enemy[1] <= 0 or enemy[1] >= self.screen_width - 86:
+                enemy[3] *= -1
+
+            if enemy[2] <= 0:
+                enemy[2] = 0
+                enemy[4] *= -1
+            elif enemy[2] >= self.screen_height - 151:
+                enemy[4] *= -1
+
+        player_lasers = self.player.lasers if self.player else []
+        player_score = self.update_lasers(dt, player_lasers, 0)
+
+    def shoot_lasers(self, current_time):
+        if current_time - self.last_shot_time >= self.shot_delay:
+            shooting_enemies = random.sample(
+                self.enemies, min(4, len(self.enemies)))
+            for enemy in shooting_enemies:
+                laserIMG = pygame.image.load("./assets/imgs/Shot.png")
+                laserOBJ = laser.Laser(
+                    x=enemy[1] + 43,
+                    y=enemy[2] + 151,
+                    width=10,
+                    height=30,
+                    speed=5,
+                    image=laserIMG,
+                    screen=None,
+                    isEnemyLaser=True,
+                )
+                self.lasers.append(laserOBJ)
+            self.last_shot_time = current_time
+
+    def update_lasers(self, dt, player_lasers, player_score=0):
+        for laserOBJ in self.lasers[:]:
+            laserOBJ.move(dt)
+            if laserOBJ.y > self.real_screen_height:
+                self.lasers.remove(laserOBJ)
+            elif self.player and laserOBJ.check_collision(self.player):
+                self.player.take_damage()
+                self.lasers.remove(laserOBJ)
+
+        for laserOBJ in player_lasers[:]:
+            laserOBJ.move(dt)
+            for enemy in self.enemies[:]:
+                if laserOBJ.check_collision(enemy):
+                    self.destroy_enemy(enemy)
+                    if laserOBJ in player_lasers:
+                        player_lasers.remove(laserOBJ)
+                    player_score += 10
+                    break
+            if laserOBJ.y < 0:
+                if laserOBJ in player_lasers:
+                    player_lasers.remove(laserOBJ)
+        if self.player:
+            self.player.score += player_score
+        return player_score
+
+    def draw_lasers(self, screen):
+        for laserOBJ in self.lasers:
+            laserOBJ.draw_laser(screen)
+
