@@ -14,6 +14,7 @@ class Enemies(sprite.Sprite):
         self.enemy_image = self.load_enemy_image()
         self.explosions = []
         self.player = None
+        self.screen = None
         self.spawn_timer = 0
         self.spawn_delay = 1000
         self.max_enemies = 24
@@ -25,6 +26,7 @@ class Enemies(sprite.Sprite):
                             for _ in range(self.max_enemies)]
         self.shot_delay = 3000
         self.last_shot_time = 0
+        self.wave = 1
 
     def load_enemy_image(self):
         enemy = pygame.image.load("./assets/imgs/Enemy.png")
@@ -40,16 +42,23 @@ class Enemies(sprite.Sprite):
             dy = random.uniform(0.5, 1.5)
             self.enemies.append([self.enemy_image, x, y, dx, dy])
 
+    def spawn_wave(self, screen):
+        self.screen = screen
+        for _ in range(self.wave * 5):
+            self.spawn_enemy()
+            self.draw_wave_number()
+
     def draw_enemy_spaceships(self, screen, player):
         self.player = player
         for enemy in self.enemies:
             screen.blit(enemy[0], (int(enemy[1]), int(enemy[2])))
 
+    def draw_explosions(self, screen):
+        for explosion in self.explosions:
+            explosion.draw(screen)
+
     def destroy_enemy(self, enemy):
-        explosion = Explosion(
-            x=enemy[1],
-            y=enemy[2],
-        )
+        explosion = Explosion(x=enemy[1], y=enemy[2])
         self.explosions.append(explosion)
         self.enemies.remove(enemy)
         self.health -= 1
@@ -59,10 +68,6 @@ class Enemies(sprite.Sprite):
             explosion.update()
             if not explosion.is_alive:
                 self.explosions.remove(explosion)
-
-    def draw_explosions(self, screen):
-        for explosion in self.explosions:
-            explosion.draw(screen)
 
     def update(self, dt):
         self.spawn_timer += dt
@@ -85,6 +90,10 @@ class Enemies(sprite.Sprite):
 
         player_lasers = self.player.lasers if self.player else []
         player_score = self.update_lasers(dt, player_lasers, 0)
+
+        if not self.enemies:
+            self.wave += 1
+            self.spawn_wave(self.screen)
 
     def shoot_lasers(self, current_time):
         if current_time - self.last_shot_time >= self.shot_delay:
@@ -134,3 +143,10 @@ class Enemies(sprite.Sprite):
         for laserOBJ in self.lasers:
             laserOBJ.draw_laser(screen)
 
+    def draw_wave_number(self):
+        font = pygame.font.Font(None, 48)
+        wave_text = font.render(
+            f"Wave: {self.wave}", True, (255, 255, 255))
+        if self.screen:
+            self.screen.blit(wave_text, (10, 100))
+            print("Wave number successfully draw")

@@ -1,3 +1,4 @@
+
 import pygame
 
 
@@ -29,6 +30,7 @@ class GameManager:
     def init_game(self):
         running = True
         clock = pygame.time.Clock()
+        self.enemiesOBJ.spawn_wave(self.screen)  
 
         while running:
             dt = clock.tick(60)
@@ -65,12 +67,17 @@ class GameManager:
     def show_game_over_screen(self):
         self.screen.fill((0, 0, 0))
         game_over_text = self.font.render("Game Over", True, (255, 0, 0))
-        score_text = self.font.render(f"Final Score: {self.player.score}", True, (255, 255, 255))
-        restart_text = self.font.render("Press R to Restart", True, (255, 255, 255))
+        score_text = self.font.render(
+            f"Final Score: {self.player.score}", True, (255, 255, 255))
+        restart_text = self.font.render(
+            "Press R to Restart", True, (255, 255, 255))
 
-        text_rect = game_over_text.get_rect(center=(self.screen.get_width() / 2, self.screen.get_height() / 2 - 50))
-        score_rect = score_text.get_rect(center=(self.screen.get_width() / 2, self.screen.get_height() / 2 + 50))
-        restart_rect = restart_text.get_rect(center=(self.screen.get_width() / 2, self.screen.get_height() / 2 + 150))
+        text_rect = game_over_text.get_rect(
+            center=(self.screen.get_width() / 2, self.screen.get_height() / 2 - 50))
+        score_rect = score_text.get_rect(
+            center=(self.screen.get_width() / 2, self.screen.get_height() / 2 + 50))
+        restart_rect = restart_text.get_rect(
+            center=(self.screen.get_width() / 2, self.screen.get_height() / 2 + 150))
 
         self.screen.blit(game_over_text, text_rect)
         self.screen.blit(score_text, score_rect)
@@ -80,11 +87,12 @@ class GameManager:
     def restart_game(self):
         self.player.lives = 3
         self.player.score = 0
+        self.enemiesOBJ.wave = 1
         self.player.x = self.screen.get_width() // 2
         self.player.y = self.screen.get_height() - 145.5
         self.player.is_destroyed = False
         self.enemiesOBJ.enemies.clear()
         self.enemiesOBJ.lasers.clear()
         self.player.lasers.clear()
+        self.enemiesOBJ.spawn_wave(self.screen)
         self.game_over = False
-

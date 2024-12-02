@@ -16,9 +16,9 @@ class Player(sprite.Sprite):
         self.explosions = []
         self.lives = 3
         self.invincible = False
-        self.invincibility_time = 2  # seconds
+        self.invincibility_time = 2
         self.last_hit_time = 0
-        self.is_destroyed = False  # Add this line
+        self.is_destroyed = False
 
     def move_left(self):
         if self.x >= 10:
@@ -45,7 +45,7 @@ class Player(sprite.Sprite):
 
     def game_over(self):
         self.destroy_player()
-        self.is_destroyed = True  # Add this line
+        self.is_destroyed = True
 
     def update_explosions(self):
         for explosion in self.explosions:
@@ -60,9 +60,7 @@ class Player(sprite.Sprite):
     def destroy_player(self):
         explosionOBJ = explosion.Explosion(x=self.x, y=self.y)
         self.explosions.append(explosionOBJ)
-        # Remove the self.kill() line
 
-    
     def take_damage(self):
         if not self.invincible:
             self.lives -= 1
@@ -71,7 +69,8 @@ class Player(sprite.Sprite):
             if self.lives <= 0:
                 self.game_over()
             else:
-                small_explosion = explosion.Explosion(x=self.x + self.width // 2, y=self.y + self.height // 2, width=50, height=50)
+                small_explosion = explosion.Explosion(
+                    x=self.x + self.width // 2, y=self.y + self.height // 2, width=50, height=50)
                 self.explosions.append(small_explosion)
 
     def update_invincibility(self):
@@ -111,7 +110,10 @@ class Player(sprite.Sprite):
 
         lives_text = font.render(f"Lives: {self.lives}", True, (255, 255, 255))
         screen.blit(lives_text, (10, 50))
-
+        
+        wave_value = enemies.wave
+        wave_text = font.render(f"Wave: {wave_value}", True, (255, 255, 255))
+        screen.blit(wave_text, (10, 100))
+        
         self.update_explosions()
         self.draw_explosions(screen)
-
