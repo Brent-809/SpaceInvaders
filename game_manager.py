@@ -1,9 +1,9 @@
-
 import pygame
+import wave_manager as waveManager
 
 
 class GameManager:
-    def __init__(self, bg_img, screen, player, enemiesOBJ):
+    def __init__(self, bg_img, screen, player, enemiesOBJ, bg_music):
         self.bg_img = bg_img
         self.screen = screen
         self.player = player
@@ -13,7 +13,14 @@ class GameManager:
         self.clock = 0
         self.game_over = False
         self.font = pygame.font.Font(None, 74)
-
+        self.wavemanager = None
+        bg_music = bg_music
+        self.play_bg_music()
+    
+    def play_bg_music(self):
+        pygame.mixer.music.set_volume(0.25)
+        pygame.mixer.music.play(-1)
+    
     def drawItems(self, dt):
         self.screen.blit(self.bg_img_obj, (0, 0))
         self.drawPlayer(dt=dt)
@@ -30,7 +37,10 @@ class GameManager:
     def init_game(self):
         running = True
         clock = pygame.time.Clock()
-        self.enemiesOBJ.spawn_wave(self.screen)  
+        self.wavemanager = waveManager.WaveManager(self.enemiesOBJ)
+        self.enemiesOBJ.set_wave_manager(self.wavemanager)
+        self.player.set_wave_manager(self.wavemanager)
+        self.wavemanager.spawn_wave(self.screen)
 
         while running:
             dt = clock.tick(60)
@@ -87,12 +97,12 @@ class GameManager:
     def restart_game(self):
         self.player.lives = 3
         self.player.score = 0
-        self.enemiesOBJ.wave = 1
+        self.wavemanager.wave = 1
         self.player.x = self.screen.get_width() // 2
         self.player.y = self.screen.get_height() - 145.5
         self.player.is_destroyed = False
         self.enemiesOBJ.enemies.clear()
         self.enemiesOBJ.lasers.clear()
         self.player.lasers.clear()
-        self.enemiesOBJ.spawn_wave(self.screen)
+        self.wavemanager.spawn_wave(self.screen)
         self.game_over = False

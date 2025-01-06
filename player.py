@@ -4,7 +4,6 @@ import sprite
 import explosion
 import time
 
-
 class Player(sprite.Sprite):
     def __init__(self, x, y, width, height, speed, image, screen, attacking=False, last_attack_time=0):
         super().__init__(x, y, width, height, speed, image, screen)
@@ -19,6 +18,7 @@ class Player(sprite.Sprite):
         self.invincibility_time = 2
         self.last_hit_time = 0
         self.is_destroyed = False
+        self.wavemanager = None
 
     def move_left(self):
         if self.x >= 10:
@@ -61,9 +61,9 @@ class Player(sprite.Sprite):
         explosionOBJ = explosion.Explosion(x=self.x, y=self.y)
         self.explosions.append(explosionOBJ)
 
-    def take_damage(self):
+    def take_damage(self, damage):
         if not self.invincible:
-            self.lives -= 1
+            self.lives -= damage
             self.invincible = True
             self.last_hit_time = time.time()
             if self.lives <= 0:
@@ -111,9 +111,13 @@ class Player(sprite.Sprite):
         lives_text = font.render(f"Lives: {self.lives}", True, (255, 255, 255))
         screen.blit(lives_text, (10, 50))
         
-        wave_value = enemies.wave
+        wave_value = self.wavemanager.wave
         wave_text = font.render(f"Wave: {wave_value}", True, (255, 255, 255))
         screen.blit(wave_text, (10, 100))
         
         self.update_explosions()
         self.draw_explosions(screen)
+    
+    def set_wave_manager(self, wave_manager):
+        self.wavemanager = wave_manager
+

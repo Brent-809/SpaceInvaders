@@ -11,6 +11,9 @@ class Explosion(Sprite):
         self.animation_speed = 5 
         self.counter = 0
         self.is_alive = True
+        self.explosion_sound = pygame.mixer.Sound("./assets/sounds/explosion.mp3")
+        self.explosion_sound.set_volume(1.0)
+        self.explosion_sound.play()
 
     def update(self):
         self.counter += 1

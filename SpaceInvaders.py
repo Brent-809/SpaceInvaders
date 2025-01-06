@@ -2,13 +2,15 @@ import pygame
 import game_manager
 import player
 import enemies
+from pygame import mixer
 
 pygame.init()
+mixer.init()
 
 screen_width = 1280
 screen_height = 720
 
-enemiesOBJ = enemies.Enemies(100, 10)
+enemiesOBJ = enemies.Enemies()
 screen = pygame.display.set_mode((screen_width, screen_height))
 bottom = screen.get_height() - 145.5
 center = screen.get_width() // 2
@@ -16,7 +18,7 @@ center = screen.get_width() // 2
 player_sprite = pygame.image.load("./assets/imgs/Char.png")
 playerOBJ = player.Player(
     x=center,
-    y=bottom,                       
+    y=bottom,
     width=86.5,
     height=145.5,
     speed=10,
@@ -24,8 +26,9 @@ playerOBJ = player.Player(
     screen=screen,
 )
 
+bg_music = mixer.music.load("./assets/sounds/background.wav")
+
 game_manager = game_manager.GameManager(
-    "./assets/imgs/stars.jpg", screen, playerOBJ, enemiesOBJ
+    "./assets/imgs/stars.jpg", screen, playerOBJ, enemiesOBJ, bg_music
 )
 game_manager.init_game()
-
