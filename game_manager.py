@@ -1,9 +1,11 @@
 import pygame
 import wave_manager as waveManager
+import keyboard
+import threading
 
 
 class GameManager:
-    def __init__(self, bg_img, screen, player, enemiesOBJ, bg_music):
+    def __init__(self, bg_img, screen, player, enemiesOBJ, bg_music, ArduinoSerial):
         self.bg_img = bg_img
         self.screen = screen
         self.player = player
@@ -15,12 +17,17 @@ class GameManager:
         self.font = pygame.font.Font(None, 74)
         self.wavemanager = None
         bg_music = bg_music
+        self.arduinoSerial = ArduinoSerial
         self.play_bg_music()
-    
+        self.arduino_thread = threading.Thread(
+            target=self.read_arduino_data_loop)
+        self.arduino_thread.daemon = True
+        self.arduino_thread.start()
+
     def play_bg_music(self):
         pygame.mixer.music.set_volume(0.25)
         pygame.mixer.music.play(-1)
-    
+
     def drawItems(self, dt):
         self.screen.blit(self.bg_img_obj, (0, 0))
         self.drawPlayer(dt=dt)
@@ -33,6 +40,33 @@ class GameManager:
 
     def drawEnemies(self):
         self.enemiesOBJ.draw_enemy_spaceships(self.screen, self.player)
+
+    def read_arduino_data(self):
+        try:
+            if self.arduinoSerial.in_waiting > 0:
+                data = self.arduinoSerial.readline().decode('ascii').strip()
+                values = data.split(":")
+                if len(values) == 3:
+                    x = values[0]
+                    try:
+                        JoyStickX = int(x)
+                        joystick_speed = max(-10, min(10, JoyStickX))
+                        self.player.speed = abs(joystick_speed)
+                        print("X Value: ", JoyStickX, "Speed: ", self.player.speed)
+                        if JoyStickX < 0:
+                            print("left <-")
+                            self.player.move_left()
+                        elif JoyStickX > 0:
+                            print("right ->")
+                            self.player.move_right(self.screen)
+                    except ValueError:
+                        print(f"Invalid joystick value: {x}")
+        except Exception as e:
+            print(f"Error reading Arduino data: {e}")
+
+    def read_arduino_data_loop(self):
+        while True:
+            self.read_arduino_data()
 
     def init_game(self):
         running = True
@@ -53,10 +87,6 @@ class GameManager:
 
             if not self.game_over:
                 keys = pygame.key.get_pressed()
-                if keys[pygame.K_d]:
-                    self.player.move_right(self.screen)
-                if keys[pygame.K_a]:
-                    self.player.move_left()
                 if keys[pygame.K_SPACE] and (pygame.time.get_ticks() - self.player.last_attack_time) > 200:
                     self.player.attack()
                     self.player.last_attack_time = pygame.time.get_ticks()
@@ -72,6 +102,7 @@ class GameManager:
             else:
                 self.show_game_over_screen()
 
+            self.wavemanager.update()
             pygame.display.update()
 
     def show_game_over_screen(self):
@@ -106,3 +137,4 @@ class GameManager:
         self.player.lasers.clear()
         self.wavemanager.spawn_wave(self.screen)
         self.game_over = False
+

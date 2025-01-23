@@ -3,9 +3,17 @@ import game_manager
 import player
 import enemies
 from pygame import mixer
+import serial
 
 pygame.init()
 mixer.init()
+
+port = 'COM3'
+ArduinoSerial = serial.Serial(port, 9600)
+
+data = str(ArduinoSerial.readline().decode('ascii'))
+(x, y, z) = data.split(":")
+(JoyStickX, JoyStickY) = (int(x), int(y))
 
 screen_width = 1280
 screen_height = 720
@@ -29,6 +37,6 @@ playerOBJ = player.Player(
 bg_music = mixer.music.load("./assets/sounds/background.wav")
 
 game_manager = game_manager.GameManager(
-    "./assets/imgs/stars.jpg", screen, playerOBJ, enemiesOBJ, bg_music
+    "./assets/imgs/stars.jpg", screen, playerOBJ, enemiesOBJ, bg_music, ArduinoSerial
 )
 game_manager.init_game()
